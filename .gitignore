@@ -6,6 +6,6 @@
 *.log
 #忽略target文件夹
 target/
-#
+#根目录下TODO的文件夹
 /TODO
 
