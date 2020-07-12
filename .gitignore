@@ -1,0 +1,11 @@
+#忽略当前路径下的.idea文件夹，该文件夹下的所有内容都会被忽略，不忽略.idea文件
+.idea/
+#忽略所有.iml文件
+*.iml
+#忽略所有.log文件
+*.log
+#忽略target文件夹
+target/
+#
+/TODO
+

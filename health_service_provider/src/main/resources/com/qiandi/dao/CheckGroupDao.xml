@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.qiandi.dao.CheckGroupDao">
+
+    <resultMap type="CheckGroup" id="baseResultMap">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="helpCode" property="helpCode"/>
+        <result column="sex" property="sex"/>
+        <result column="remark" property="remark"/>
+        <result column="attention" property="attention"/>
+    </resultMap>
+
+    <resultMap type="CheckGroup" id="findCheckGroupById" extends="baseResultMap">
+        <collection property="checkItems"
+                    ofType="CheckItem"
+                    column="id"
+                    select="com.qiandi.dao.CheckItemDao.findCheckItemById">
+        </collection>
+    </resultMap>
+    
+    
+    
+    <!--插入检查组数据-->
+    <!--void add(CheckGroup checkGroup);-->
+    <insert id="add" parameterType="CheckGroup">
+        <!--selectKey  会将 SELECT LAST_INSERT_ID()的结果放入到传入的model的主键里面，
+            keyProperty 对应的model中的主键的属性名，这里是CheckGroup中的id，因为它跟数据库的主键对应
+            order AFTER 表示 SELECT LAST_INSERT_ID() 在insert执行之后执行,多用与自增主键，
+                  BEFORE 表示 SELECT LAST_INSERT_ID() 在insert执行之前执行，这样的话就拿不到主键了，
+                        这种适合那种主键不是自增的类型
+            resultType 主键类型-->
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into t_checkgroup(code,name,sex,helpCode,remark,attention)
+        values
+        (#{code},#{name},#{sex},#{helpCode},#{remark},#{attention})
+    </insert>
+
+    <!--为检查组和检查项设立关联-->
+    <!--void setCheckGroupAndCheckItem(Map<String, Integer> map);-->
+    <insert id="setCheckGroupAndCheckItem" parameterType="map">
+        insert into t_checkgroup_checkitem(checkgroup_id,checkitem_id)
+        values
+        (#{checkGroupId},#{checkitemId})
+    </insert>
+
+
+    <!--根据条件进行查询-->
+    <!--Page<CheckGroup> findByCondition(String queryString);-->
+    <select id="findByCondition" parameterType="string" resultType="CheckGroup">
+        select * from t_checkgroup
+        <where>
+            <if test="value != null and value.length > 0">
+                code = #{value} or name = #{value} or helpCode = #{value}
+            </if>
+        </where>
+    </select>
+
+
+    <!--根据ID查询-->
+    <!--CheckGroup findById(Integer id);-->
+    <select id="findById" parameterType="int" resultType="CheckGroup">
+        select * from t_checkgroup where id=#{id}
+    </select>
+
+    <!--根据检查组ID查询关联的多个检查项ID，查询中间关系表-->
+    <!--List<Integer> findCheckItemIdsByCheckGroupId(Integer id);-->
+    <select id="findCheckItemIdsByCheckGroupId" parameterType="int" resultType="int">
+        select checkitem_id from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </select>
+
+
+    <!--修改检查组基本信息，操作检查组t_checkgroup表-->
+    <!--void edit(CheckGroup checkGroup);-->
+    <update id="edit" parameterType="checkGroup">
+        update t_checkgroup
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="code != null">
+                code = #{code},
+            </if>
+            <if test="helpCode != null">
+                helpCode = #{helpCode},
+            </if>
+            <if test="attention != null">
+                attention = #{attention},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <!--根据检查组ID清理关联的检查项信息，操作的表t_checkgroup_checkitem-->
+    <!--void deleteAssocication(Integer id);-->
+    <delete id="deleteAssocication" parameterType="int">
+         delete from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </delete>
+
+
+    <!--根据检查组ID删除检查组-->
+    <!--void delete(Integer id);-->
+    <delete id="delete" parameterType="int">
+        delete from t_checkgroup where id = #{id}
+    </delete>
+
+    
+    <!--查询所有检查组-->
+    <!--List<CheckGroup> findAll();-->
+    <select id="findAll" resultType="checkGroup">
+        select * from t_checkgroup
+    </select>
+
+
+<!--setmeal多表练查
+    根据套餐id查询关联的检查组详情（检查组和检查项）
+-->
+        <select id="findCheckGroupById" parameterType="int" resultMap="findCheckGroupById">
+            select * from t_checkgroup
+            where id
+            in (select checkgroup_id from t_setmeal_checkgroup where setmeal_id=#{id})
+        </select>
+    
+    
+</mapper>
